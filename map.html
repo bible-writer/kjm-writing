@@ -19793,7 +19793,7 @@ body:not(.admin-mode) .name-editable { border-bottom: none !important; cursor: d
         if (titleEl) titleEl.textContent = `바이블 맵 스터디`;   // (b20261008-4 kjm 「5」) 옛 이름: 성경 66권 인터랙티브 독서 지도
         // 판 딱지 — 어느 map.html이 돌고 있는지 눈으로 가릴 수 있게 붙인다.
         // 고칠 때마다 이 숫자를 올릴 것
-        if (subEl)   subEl.textContent   = `읽고, 찾아가고, 원어로 깊이 · b20261114-21`;
+        if (subEl)   subEl.textContent   = `읽고, 찾아가고, 원어로 깊이 · b20261114-22`;
         document.title = `바이블 맵 스터디`;
       }
     }
@@ -25163,7 +25163,7 @@ window.RoutePlay = (function () {
   }
   window.openConcordance = function (word) {
     var m = document.getElementById('conc-modal') || ui();
-    m.style.display = 'flex'; if (m._box) m._box();
+    m.style.display = 'flex'; m.style.zIndex = ''; if (m._box) m._box();   // (b20261114-22) 다시 열면 맨 앞
     var L = m.querySelector('.cc-l');
     if (!dbReady()) { L.innerHTML = '<div class="cc-note">성경 DB를 먼저 열어 주십시오.<br>성구사전은 이 기기에 연 성경 DB(.bdb)로 색인을 만듭니다 — 개역개정 DB를 열면 개역개정으로, 개역한글 DB를 열면 개역한글로 찾습니다.</div>'; return; }
     if (!(IDX && IDXDB === sqliteDbInstance)) L.innerHTML = '<div class="cc-note">색인을 만드는 중입니다… (처음 한 번, 몇 초)</div>';
@@ -25365,12 +25365,25 @@ window.RoutePlay = (function () {
   }
   window.openStudyAids = function (tab) {
     ensure(); if (tab) TAB = tab;
-    M.style.display = 'flex'; document.getElementById('aid-bk').style.display = window.innerWidth <= 768 ? 'block' : 'none';
+    M.style.display = 'flex'; M.style.zIndex = ''; document.getElementById('aid-bk').style.display = window.innerWidth <= 768 ? 'block' : 'none';
     var L = M.querySelector('.ad-l'); L.innerHTML = '<div class="ad-note">자료를 받는 중입니다…</div>';
     loadAid().then(function () { render(); });
     setTimeout(arrange, 0);
   };
   window.addEventListener('resize', function () { arrange(); });
+  /* (b20261114-22) 큰 화면에서 떠 있는 창(도우미·성구사전)은 「누른 창이 맨 앞」:
+   * 창 밖을 누르면 그 창을 뒤로(3000) 보내 새로 여는 도감·성구사전 등이 가려지지 않게 하고, 창 안을 누르면 다시 앞으로.
+   * 폰은 창이 화면을 덮는 아래 판이라 그대로 둔다. 설명창(인물·사전·원어·낱말)을 누를 때는 도우미를 그대로 둔다. */
+  var FRONT = [['aid-modal', '10047'], ['conc-modal', '9999']];
+  document.addEventListener('pointerdown', function (e) {
+    if (window.innerWidth <= 768) return;
+    var t = e.target; if (!t || !t.closest) return;
+    if (t.closest('#person-info-panel,#term-info-panel,#strong-info-panel,#word-panel,#aid-vm')) return;
+    FRONT.forEach(function (f) {
+      var el = document.getElementById(f[0]); if (!el || el.style.display === 'none' || !el.offsetWidth) return;
+      el.style.zIndex = el.contains(t) ? f[1] : '3000';
+    });
+  }, true);
   /* (b20261114-21) ❓ 사용법 */
   function help() {
     M.querySelectorAll('.ad-tabs button').forEach(function (b) { b.classList.remove('on'); });
